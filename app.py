@@ -1,70 +1,109 @@
-# XTODO Add Dunder Main
-# XTODO Import constants.py file
-# XTODO Create data cleaning function
-    # XTODO Copy list with copy.deepcopy(). (lookup how to use copy.deepcopy())
-        # XTODO Import copy
-    # XTODO Create cleaned_data list to store cleaned data
-    # XTODO Loop through dictionaries in PLAYERS_copy
-    # XTODO Create new dictionary for each player in for loop
-    # XTODO Add dictionary values to new list of dictionaries
-        # XTODO Add player name to new dictionary
-        # XTODO Split guardians into list using .split(" and "). Add to new dictionary
-        # XTODO Set 'experience' to True if 'YES' and False if 'NO'. Add to new dictionary
-        # XTODO Set 'height' to integer. (.split() and take the index[0] value and convert to int). Add to dictionary
-        # XTODO Extra Credit: Turn guardian stings into list of guardians using .split(" and "). Add to dictionary
-        # XTODO Print to check if data has been properly cleaned
-# TODO Create a balance_teams function
-    # TODO
-# TODO Create sort_players function
-    # XTODO Create 2 lists of players, experienced and inexperienced
-# TODO Create a while loop that runs the main code for the app. Run loop until user enters Quit.
+# Baseball Team Stats App
 
+# File Imports
 import constants
 import copy
+import random
+import sys
 
+
+# This function converts data to a more suitable format for the program
 def clean_data(data):
-    cleaned_data = []
-    for player in data:
-        fixed = {}
-        fixed['name'] = player['name']
-        fixed['guardians'] = player['guardians'].split(' and ')
-        fixed['experience'] = True if player['experience'] == 'YES' else False
-        fixed['height'] = int(player['height'].split()[0])
-        cleaned_data.append(fixed)
-    return cleaned_data
+    data_copy = copy.deepcopy(data)  # Copy data
+    return [{'name': player['name'], 'guardians': player['guardians'].split(' and '),
+             'experience': True if player['experience'] == 'YES' else False,
+             'height': int(player['height'].split()[0])} for player in
+            data_copy]  # List comprehension to store converted data
 
-def sort_players(data):
-    experienced_players = []
-    inexperienced_players = []
-    for player in data:
-        if player["experience"] == True:
-            experienced_players.append(player)
-        else:
-            inexperienced_players.append(player)
+
+def sort_players_experience(data):  # Separates players by experience
+    experienced_players = [player for player in data if player["experience"]]
+    inexperienced_players = [player for player in data if not player["experience"]]
+    random.shuffle(experienced_players)
+    random.shuffle(inexperienced_players)
     return experienced_players, inexperienced_players
 
 
-# Create comprehension
-# def balance_teams(experienced, inexperienced):
+def balance_teams(teams, experienced, inexperienced):  # Distributes players evenly across teams
+    teams.sort()  # Alphabetizes teams
+    balanced_teams = []
+    experienced_players_per_team = int(len(experienced) / len(teams))
+    inexperienced_players_per_team = int(len(inexperienced) / len(teams))
+    total_players_per_team = experienced_players_per_team + inexperienced_players_per_team
+    for index, team in enumerate(teams, 1):
+        balanced_team = {
+            'team number': index,
+            'team name': team,
+            'experienced players': [],
+            'inexperienced players': [],
+            '# players': total_players_per_team,
+            '# experienced': experienced_players_per_team,
+            '# inexperienced': inexperienced_players_per_team,
+        }
+
+        for player in range(experienced_players_per_team):
+            balanced_team['experienced players'].append(experienced.pop())
+
+        for player in range(inexperienced_players_per_team):
+            balanced_team['inexperienced players'].append(inexperienced.pop())
+
+        all_team_players = balanced_team['experienced players'] + balanced_team['inexperienced players']
+        player_heights = [all_team_players[index]['height'] for index, player in enumerate(all_team_players)]
+        balanced_team['average height'] = round(sum(player_heights) / total_players_per_team, 1)  # Average height calculation rounded to 1 digit
+        balanced_teams.append(balanced_team)
+    return balanced_teams
 
 
-# def run_app():
+def show_teams(teams):  # Main loop code
+    while True:
+        print("\n-----Team Selection-----\n")
+        print("Teams:")
+        for index, team in enumerate(teams):
+            print(teams[index]['team number'], teams[index]['team name'])
+        print("\nType 'Quit' to Exit")
+        while True:
+            choose_team = input("\nEnter team number to display stats: ")
+            try:
+                choice = int(choose_team)
+                if type(choice) == int:
+                    if choice in range(len(teams) + 1):
+                        display_team(choice, teams)
+                        input("\npress ENTER to continue...")
+                        show_teams(teams)
+                    else:
+                        raise ValueError
+            except ValueError:
+                if choose_team.lower() == 'quit':
+                    print('Program Exiting')
+                    sys.exit(0)
+                else:
+                    print("Invalid input, try again.")
+                    continue
 
+
+def display_team(team_number, teams):  # Displays team based on user choice
+    team_number -= 1  # Adjustment for indexing
+    print("\n-----Team Stats-----\n")
+    print("Team Name: " + teams[team_number]['team name'], '\n--------------------')
+    print("Total Players: ", teams[team_number]['# players'])
+    print("Total Experienced: ", teams[team_number]['# experienced'])
+    print("Total Inexperienced: ", teams[team_number]['# inexperienced'])
+    print("Average Height: ", teams[team_number]['average height'], "Inches\n")
+    players = teams[team_number]['experienced players'] + teams[team_number]['inexperienced players']
+    player_names = [players[index]['name'] for index, player in enumerate(players)]
+    print("Team Players: \n ", ", ".join(player_names), '\n')
+    guardians = []
+    for index, player in enumerate(players):
+        guardians += (players[index]['guardians'])
+    print("Guardians: \n ", ", ".join(guardians), '\n')
 
 
 def main():
-    cleaned_data = clean_data(PLAYERS_copy)
-    experienced_players, inexperienced_players = sort_players(cleaned_data)
-    print(experienced_players)
-    print(inexperienced_players)
-    # balance_teams(experienced_players, inexperienced_players)
-    # while True:
+    cleaned_data = clean_data(constants.PLAYERS)
+    experienced_players, inexperienced_players = sort_players_experience(cleaned_data)
+    teams = balance_teams(constants.TEAMS, experienced_players, inexperienced_players)
+    show_teams(teams)
 
 
-# Place calculations, function calls and logic blocks that need to run
-# inside dunder main block at bottom of file.
-# place all function calls in main() function so all functions run when dunder condition is met
-# This prevents automatic execution when this app is imported into another script.
-if  __name__ == '__main__':
-    PLAYERS_copy = copy.deepcopy(constants.PLAYERS)
+if __name__ == '__main__':
     main()
