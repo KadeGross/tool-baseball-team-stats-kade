@@ -12,8 +12,7 @@ def clean_data(data):
     data_copy = copy.deepcopy(data)  # Copy data
     return [{'name': player['name'], 'guardians': player['guardians'].split(' and '),
              'experience': True if player['experience'] == 'YES' else False,
-             'height': int(player['height'].split()[0])} for player in
-            data_copy]  # List comprehension to store converted data
+             'height': int(player['height'].split()[0])} for player in data_copy]  # List comprehension to store converted data
 
 
 def sort_players_experience(data):  # Separates players by experience
